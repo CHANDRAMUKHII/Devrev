@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
+require("dotenv").config();
 const AdminModel = require("./models/adminModel");
 const UserModel = require("./models/userModel");
 const FlightModel = require("./models/flightModel");
@@ -110,18 +111,19 @@ app.delete("/flight/:id", async (req, res) => {
   }
 });
 
-
 app.post("/userlogin", async (req, res) => {
-  const { name, password } = req.body;
+  const { email, password } = req.body;
   const response = await UserModel.find(
-    { name: name },
+    { email: email },
     { password: 1, _id: 0 }
   );
   bcrypt
     .compare(password, response[0].password)
     .then((resp) => {
       if (resp) {
-        res.send("User logged in successfully");
+        const user = { email: email };
+        const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
+        res.json({ accessToken: accessToken });
       } else res.send(false);
     })
     .catch((error) => console.log(error));
@@ -178,7 +180,7 @@ app.post("/flight/:id", async (req, res) => {
     const user = await UserModel.findById(u_id);
 
     const booking = new BookingModel({
-      user_id:u_id,
+      user_id: u_id,
       flightNumber: flight.flightNumber,
       passengerName: user.name,
       passengerEmail: user.email,
@@ -192,12 +194,11 @@ app.post("/flight/:id", async (req, res) => {
   }
 });
 // MY BOOKINGS
-app.get("/user/:id",async(req,res)=>{
-    const {id} = req.params;
-    const response = await BookingModel.find({user_id:id})
-    res.send(JSON.stringify(response))
-
-})
+app.get("/user/:id", async (req, res) => {
+  const { id } = req.params;
+  const response = await BookingModel.find({ user_id: id });
+  res.send(JSON.stringify(response));
+});
 
 // ALL BOOKINGS ADMIN
 
