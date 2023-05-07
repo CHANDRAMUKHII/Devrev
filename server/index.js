@@ -1,13 +1,19 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
+const cors = require("cors");
 require("dotenv").config();
 const AdminModel = require("./models/adminModel");
 const UserModel = require("./models/userModel");
 const FlightModel = require("./models/flightModel");
 const BookingModel = require("./models/bookingModel");
 const app = express();
-
+const jwt = require("jsonwebtoken");
+app.use(
+  cors({
+    origin: "*",
+  })
+);
 app.use(express.json());
 mongoose
   .connect(
@@ -37,8 +43,8 @@ app.post("/admin", async (req, res) => {
 });
 
 app.post("/user", async (req, res) => {
-  const {
-    name,
+  let {
+    user_name,
     password,
     email,
     age,
@@ -47,8 +53,11 @@ app.post("/user", async (req, res) => {
     passport,
   } = req.body;
   const hash = await bcrypt.hash(password, 10);
+  if (passport === "Yes") passport = "true";
+  else passport = "false";
+
   const user = new UserModel({
-    name: name,
+    name: user_name,
     password: hash,
     email: email,
     age: age,
@@ -57,10 +66,10 @@ app.post("/user", async (req, res) => {
     passport: passport,
   });
   try {
-    user.save();
-    res.send("User created successfully");
+    await user.save();
+    res.send(true);
   } catch {
-    res.send("error");
+    res.send(false);
   }
 });
 
@@ -113,20 +122,24 @@ app.delete("/flight/:id", async (req, res) => {
 
 app.post("/userlogin", async (req, res) => {
   const { email, password } = req.body;
+  
   const response = await UserModel.find(
     { email: email },
     { password: 1, _id: 0 }
   );
-  bcrypt
-    .compare(password, response[0].password)
-    .then((resp) => {
-      if (resp) {
-        const user = { email: email };
-        const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
-        res.json({ accessToken: accessToken });
-      } else res.send(false);
-    })
-    .catch((error) => console.log(error));
+  
+  if ((response.length!==0)) {
+    bcrypt
+      .compare(password, response[0].password)
+      .then((resp) => {
+        if (resp) {
+          const user = { email: email };
+          const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
+          res.json({ accessToken: accessToken });
+        } else res.send(false);
+      })
+      .catch((error) => console.log(error));
+  } else res.send("NE");
 });
 
 app.post("/adminlogin", async (req, res) => {
@@ -144,6 +157,18 @@ app.post("/adminlogin", async (req, res) => {
     })
     .catch((error) => console.log(error));
 });
+
+// SUGGESTIONS
+app.post("/suggestions",async(req,res)=>{
+  let { value} = req.body;
+
+  const response = await FlightModel.find({
+    origin: { $regex: value, $options: "i" },
+  },{origin:1,_id:0});
+  
+  res.send(response);
+})
+
 // SEARCH FOR FLIGHTS BASED ON DATE AND TIME
 app.post("/search", async (req, res) => {
   const { startdate, enddate } = req.body;

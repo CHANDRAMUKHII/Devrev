@@ -7,20 +7,25 @@ const UserLogin = () => {
   const navigate = useNavigate();
   const emailRef = useRef();
   const passwordRef = useRef();
-  let flag = true;
+  let flag;
   async function submitHandler(event) {
     event.preventDefault();
     const email = emailRef.current.value;
     const password = passwordRef.current.value;
-    console.log(email);
+    console.log(password);
     await axios
       .post("http://localhost:3000/userlogin", { email, password })
       .then((res) => {
         if (res.data === false) {
           flag = false;
-          alert("Incorrect password");
+          alert("Incorrect email or password");
+        } else if (res.data === "NE") {
+          flag = false;
+          alert("Unregistered user");
+        } else {
+          flag = true;
+          localStorage.setItem("access_token", res.data.accessToken);
         }
-        localStorage.setItem("access_token", res.data.accessToken);
       })
       .catch((error) => console.log(error));
     if (flag === true) navigate("/booking");

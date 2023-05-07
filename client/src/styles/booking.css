@@ -101,3 +101,8 @@ li.active {
   margin-top: 32px;
   margin-bottom: -60px;
 }
+
+.react-datetime-picker__wrapper{
+border: none !important;
+
+}
