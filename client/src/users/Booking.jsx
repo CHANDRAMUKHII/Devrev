@@ -2,6 +2,7 @@ import "../styles/booking.css";
 import { useState } from "react";
 import NavBar from "../templates/NavBar";
 import blob from "../assets/blob.png";
+import airplane from "../assets/airplane.png";
 import DateTimePicker from "react-datetime-picker";
 import axios from "axios";
 const Booking = () => {
@@ -10,41 +11,53 @@ const Booking = () => {
   const [fromSuggestions, setfromSuggestions] = useState([]);
   const [toSuggestions, settoSuggestions] = useState([]);
   const [departure, setDepature] = useState(new Date());
-  function handleInputChange1(event) {
+  const [arrival, setArrival] = useState(new Date());
+  const [flightdata, setflightdata] = useState([]);
+  function handlefromChange(event) {
     const value = event.target.value;
     setfromValue(value);
     if (value === "") setfromSuggestions([]);
-    
-      else {
-      generateSuggestions(value).then((suggestions) => {
+    else {
+      generatefromSuggestions(value).then((suggestions) => {
         setfromSuggestions(suggestions);
       });
     }
   }
 
-  function handleInputChange2(event) {
+  function handletoChange(event) {
     const value = event.target.value;
     settoValue(value);
     if (value === "") settoSuggestions([]);
     else {
-      generateSuggestions(value).then((suggestions) => {
+      generatetoSuggestions(value).then((suggestions) => {
         settoSuggestions(suggestions);
       });
     }
   }
 
-   function generateSuggestions(value) {
-    if(value==="")return [];
-    return  axios
-      .post("http://localhost:3000/suggestions", { value })
+  function generatefromSuggestions(value) {
+    if (value === "") return [];
+    return axios
+      .post("http://localhost:3000/fromsuggestions", { value })
       .then((response) => {
         return response.data.map((item) => item.origin);
       })
       .catch((error) => {
         console.log(error);
       });
+  }
 
-    // return ["Suggestion 1", "Suggestion 2", "Suggestion 3"];
+  function generatetoSuggestions(value) {
+    if (value === "") return [];
+    return axios
+      .post("http://localhost:3000/tosuggestions", { value })
+      .then((response) => {
+        console.log(response.data);
+        return response.data.map((item) => item.destination);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   }
 
   function handleSuggestionClick1(suggestion) {
@@ -55,6 +68,27 @@ const Booking = () => {
   function handleSuggestionClick2(suggestion) {
     settoValue(suggestion);
     settoSuggestions([]);
+  }
+
+  function handleflightsubmit(event) {
+    event.preventDefault();
+    if (departure > arrival || departure === arrival)
+      alert("Departure should be lesser than arrival");
+    else {
+      axios
+        .post("http://localhost:3000/search", {
+          fromValue,
+          toValue,
+          departure,
+          arrival,
+        })
+        .then((response) => {
+          setflightdata(response.data);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    }
   }
   return (
     <div className="main-wrapper">
@@ -71,7 +105,7 @@ const Booking = () => {
                 <input
                   type="text"
                   value={fromValue}
-                  onChange={handleInputChange1}
+                  onChange={handlefromChange}
                   className="place-search"
                   placeholder="From"
                 />
@@ -90,7 +124,7 @@ const Booking = () => {
                 <input
                   type="text"
                   value={toValue}
-                  onChange={handleInputChange2}
+                  onChange={handletoChange}
                   className="place-search"
                   placeholder="To"
                 />
@@ -112,12 +146,37 @@ const Booking = () => {
                   value={departure}
                 />
               </div>
+
+              <div>
+                <DateTimePicker
+                  onChange={(date) => setArrival(date)}
+                  className="place-search"
+                  value={arrival}
+                />
+              </div>
             </div>
             <div className="search-flight-btn">
-              <span className="flight-btn">Search Flights</span>
+              <span className="flight-btn" onClick={handleflightsubmit}>
+                Search Flights
+              </span>
             </div>
           </form>
         </div>
+      </div>
+      <div className="wrapper">
+        {flightdata.map((flight) => {
+          return (
+            <div className="flights-container">
+          <div className="flight-details">
+            <img src={airplane} alt="logo" className="login-logo" />
+            <h1 className="flight-number">{flight.flightNumber}</h1>
+          </div>
+          <div className="flight-details">
+            <div></div>
+</div>
+        </div>
+          );
+        })}
       </div>
     </div>
   );

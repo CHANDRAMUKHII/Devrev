@@ -35,23 +35,26 @@ const flightSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  firstclassocc: {
+  duration: {
     type: Number,
     required: true,
   },
-  economyclassocc: {
-    type: Number,
-    required: true,
-  },
-  businessclassocc: {
-    type: Number,
-    required: true,
+  cost: {
+    business: {
+      type: Number,
+      required: true,
+    },
+    firstClass: {
+      type: Number,
+      required: true,
+    },
+    economy: {
+      type: Number,
+      required: true,
+    },
   }
- 
 });
 
+const Flight = mongoose.model("Flight", flightSchema);
 
-const Flight = mongoose.model('Flight', flightSchema);
-
-
-module.exports=Flight;
+module.exports = Flight;

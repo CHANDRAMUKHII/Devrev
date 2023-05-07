@@ -76,29 +76,33 @@ app.post("/user", async (req, res) => {
 app.post("/flight", async (req, res) => {
   const {
     airline,
-    flightnum,
+    flightNumber,
     origin,
     destination,
     departureDate,
     firstclassCount,
     economyclassCount,
     businessclassCount,
-    firstclassocc,
-    economyclassocc,
-    businessclassocc,
+    duration,
+    business,
+    firstClass,
+    economy,
   } = req.body;
   const flight = new FlightModel({
     airline: airline,
-    flightNumber: flightnum,
+    flightNumber: flightNumber,
     origin: origin,
     destination: destination,
     departureDate: departureDate,
     firstclassCount: firstclassCount,
     economyclassCount: economyclassCount,
     businessclassCount: businessclassCount,
-    firstclassocc: firstclassocc,
-    economyclassocc: economyclassocc,
-    businessclassocc: businessclassocc,
+    duration: duration,
+    cost: {
+      business: business,
+      firstClass: firstClass,
+      economy: economy,
+    },
   });
 
   try {
@@ -108,6 +112,8 @@ app.post("/flight", async (req, res) => {
     res.send("Error!!");
   }
 });
+
+// DELETE
 app.delete("/flight/:id", async (req, res) => {
   try {
     const deletedFlight = await FlightModel.findByIdAndDelete(req.params.id);
@@ -122,13 +128,13 @@ app.delete("/flight/:id", async (req, res) => {
 
 app.post("/userlogin", async (req, res) => {
   const { email, password } = req.body;
-  
+
   const response = await UserModel.find(
     { email: email },
     { password: 1, _id: 0 }
   );
-  
-  if ((response.length!==0)) {
+
+  if (response.length !== 0) {
     bcrypt
       .compare(password, response[0].password)
       .then((resp) => {
@@ -158,25 +164,52 @@ app.post("/adminlogin", async (req, res) => {
     .catch((error) => console.log(error));
 });
 
-// SUGGESTIONS
-app.post("/suggestions",async(req,res)=>{
-  let { value} = req.body;
+// ORIGIN SUGGESTIONS
+app.post("/fromsuggestions", async (req, res) => {
+  let { value } = req.body;
 
-  const response = await FlightModel.find({
-    origin: { $regex: value, $options: "i" },
-  },{origin:1,_id:0});
-  
-  res.send(response);
-})
+  const response = await FlightModel.find(
+    {
+      origin: { $regex: value, $options: "i" },
+    },
+    { origin: 1, _id: 0 }
+  );
 
-// SEARCH FOR FLIGHTS BASED ON DATE AND TIME
-app.post("/search", async (req, res) => {
-  const { startdate, enddate } = req.body;
-  const response = await FlightModel.find({
-    departureDate: { $gte: startdate, $lte: enddate },
-  });
   res.send(response);
 });
+
+// DEPATURE SUGGESTIONS
+app.post("/tosuggestions", async (req, res) => {
+  let { value } = req.body;
+
+  const response = await FlightModel.find(
+    {
+      destination: { $regex: value, $options: "i" },
+    },
+    { destination: 1, _id: 0 }
+  );
+
+  res.send(response);
+});
+
+// SEARCH FOR FLIGHTS BASED ON PLACE , DATE AND TIME
+app.post("/search", async (req, res) => {
+  const { fromValue, toValue, departure, arrival } = req.body;
+
+  const departureDate = new Date(departure);
+  const arrivalDate = new Date(arrival);
+
+  arrivalDate.setDate(arrivalDate.getDate() + 1);
+
+  const response = await FlightModel.find({
+    departureDate: { $gte: departureDate, $lt: arrivalDate },
+    destination: { $regex: toValue, $options: "i" },
+    origin: { $regex: fromValue, $options: "i" },
+  });
+console.log(response);
+  res.send(response);
+});
+
 // BOOK FLIGHTS
 app.post("/flight/:id", async (req, res) => {
   const { id } = req.params;
