@@ -292,10 +292,10 @@ app.post("/flight/:id", async (req, res) => {
   }
 });
 // MY BOOKINGS
-app.get("/user/:id", async (req, res) => {
+app.post("/user/:id", async (req, res) => {
   const { id } = req.params;
   const response = await BookingModel.find({ user_id: id });
-  res.send(JSON.stringify(response));
+  res.send(response);
 });
 // DELETE BOOKINGS
 app.post("/delbooking/:id", async (req, res) => {
@@ -315,7 +315,7 @@ app.post("/delbooking/:id", async (req, res) => {
 });
 
 // ALL FLIGHTS
-app.get("/flights", async (req, res) => {
+app.post("/flightsfetch", async (req, res) => {
   const response = await FlightModel.find({});
   res.send(response);
 });

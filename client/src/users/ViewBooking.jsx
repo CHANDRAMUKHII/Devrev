@@ -7,10 +7,11 @@ const ViewBooking = () => {
   const [data, setData] = useState([]);
   useEffect(() => {
     const id = localStorage.getItem("id");
-    axios.get(`http://localhost:3000/user/${id}`).then((response) => {
+    axios.post(`http://localhost:3000/user/${id}`).then((response) => {
+      console.log(response.data);
       setData(response.data);
-    });
-  });
+    })
+  },[]);
   function handleDelete(event,id,f_id) {
     event.preventDefault();
     axios.post(`http://localhost:3000/delbooking/${id}`,{f_id})

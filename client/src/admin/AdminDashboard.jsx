@@ -21,7 +21,7 @@ const AdminDashboard = () => {
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:3000/flights").then((response) => {
+    axios.post("http://localhost:3000/flightsfetch").then((response) => {
       setData(response.data);
     });
   });
@@ -85,14 +85,13 @@ const AdminDashboard = () => {
     event.preventDefault();
     console.log(id);
     axios.delete(`http://localhost:3000/flight/${id}`).then((res) => {
-      if(res.data === true)
-{
-toast.success("Flight removed successfully", {
-              position: toast.POSITION.TOP_RIGHT,
-              autoClose: 2000,
-              hideProgressBar: true,
-            });
-}
+      if (res.data === true) {
+        toast.success("Flight removed successfully", {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 2000,
+          hideProgressBar: true,
+        });
+      }
     });
   }
   return (
@@ -245,7 +244,10 @@ toast.success("Flight removed successfully", {
                   <p className="booked-details">From : {flight.origin}</p>
                   <p className="booked-details">To : {flight.destination}</p>
                   <p className="booked-details">
-                    Date : {new Date(flight.departureDate).toLocaleString("en-US", {timeZone: "Asia/Kolkata"})}
+                    Date :{" "}
+                    {new Date(flight.departureDate).toLocaleString("en-US", {
+                      timeZone: "Asia/Kolkata",
+                    })}
                   </p>
                 </div>
                 <div className="cancel-ticket">
