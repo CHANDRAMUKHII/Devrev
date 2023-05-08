@@ -1,0 +1,62 @@
+*{
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.blob-img {
+  position: absolute;
+  width: 100%;
+  top: 0px;
+  z-index: -1;
+}
+
+.my-bookings {
+padding: 20px;
+  width: auto;
+  height: auto;
+  background-color:#e7f5ff ;
+box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;
+}
+
+.booking-title {
+  text-align: center;
+font-weight: bold;
+font-size: 32px;
+font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+}
+
+.details-flight{
+padding: 20px;
+margin: 20px;
+box-shadow: rgba(0, 0, 0, 0.1) 0px 0px 5px 0px, rgba(0, 0, 0, 0.1) 0px 0px 1px 0px;
+display: flex;
+align-items: center;
+gap: 10rem;
+background-color: aliceblue;
+}
+
+.cancel-btn{
+
+padding: 7px;
+background-color:rgb(255, 109, 56) ;
+font-size: large;
+font-weight: bold;
+border-radius: 15px;
+    box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 4px, rgba(0, 0, 0, 0.3) 0px 7px 13px -3px, rgba(0, 0, 0, 0.2) 0px -3px 0px inset;
+}
+
+.cancel-btn:hover{
+cursor: pointer;
+}
+.left-side{
+text-align: left;
+display: flex;
+flex-direction: column;
+
+}

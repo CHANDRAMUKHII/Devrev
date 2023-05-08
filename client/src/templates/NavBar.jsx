@@ -6,35 +6,51 @@ import "../styles/navbar.css";
 const NavBar = () => {
   const navigate = useNavigate();
   const [isLoggedIn, setLoggedIn] = useState(false);
-
+  const [name, setName] = useState("");
   useEffect(() => {
     const isLogged = localStorage.getItem("access_token");
     if (isLogged === null) setLoggedIn(false);
-    else setLoggedIn(true);
-
-    
-  }, []);
+    else {
+      setLoggedIn(true);
+      setName(localStorage.getItem("name"));
+    }
+  });
   function logoutHandler(event) {
     event.preventDefault();
     localStorage.removeItem("access_token");
+    setName("");
     window.location.reload();
   }
-function loginHandler(event)
-{
+  function loginHandler(event) {
     event.preventDefault();
     navigate("/userlogin");
-}
+  }
+
+  function redirectToBooking(event) {
+    event.preventDefault();
+    console.log("Clicked");
+    const id = localStorage.getItem("id");
+    navigate(`/booking/${id}`);
+  }
+  function redirectToHome(event) {
+    event.preventDefault();
+    navigate("/booking");
+  }
   return (
     <nav>
-      <div className="logo-container" onclick="redirectToHome()">
+      <div className="logo-container" onClick={redirectToHome}>
         <img src={logo} className="logo" alt="logo" />
         <h1 className="logo-title">FlyNow</h1>
       </div>
       <div className="details">
         <p className="username" id="username">
-          Name
+           {name}
         </p>
-        <div title="Cart" onclick="redirectToCart()" className="cart-icon">
+        <div
+          title="My Booking"
+          onClick={redirectToBooking}
+          className="cart-icon"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"

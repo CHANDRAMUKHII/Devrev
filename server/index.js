@@ -14,10 +14,14 @@ app.use(
     origin: "*",
   })
 );
+
+const username = process.env.USER_NAME;
+const password = process.env.PASSWORD;
+
 app.use(express.json());
 mongoose
   .connect(
-    "mongodb+srv://chandramukhiianbarasu:RNb2wnscXNM4CE6C@flightbooking.dojt722.mongodb.net/flightbooking"
+    `mongodb+srv://${username}:${password}@flightbooking.dojt722.mongodb.net/flightbooking`
   )
   .then(() => {
     console.log("Connected to the database");
@@ -26,22 +30,23 @@ mongoose
     console.log(err);
   });
 
+// CREATE ADMIN
 app.post("/admin", async (req, res) => {
-  const { name, password, email } = req.body;
+  const {  password, email } = req.body;
   const hash = await bcrypt.hash(password, 10);
   const admin = new AdminModel({
-    name: name,
     password: hash,
     email: email,
   });
   try {
     admin.save();
-    res.send("Admin Registered successfully");
+    res.send(true);
   } catch {
-    res.send("error");
+    res.send(false);
   }
 });
 
+// CREATE USER
 app.post("/user", async (req, res) => {
   let {
     user_name,
@@ -73,13 +78,14 @@ app.post("/user", async (req, res) => {
   }
 });
 
+// CREATE FLIGHT
 app.post("/flight", async (req, res) => {
   const {
     airline,
     flightNumber,
     origin,
     destination,
-    departureDate,
+    departure,
     firstclassCount,
     economyclassCount,
     businessclassCount,
@@ -88,12 +94,14 @@ app.post("/flight", async (req, res) => {
     firstClass,
     economy,
   } = req.body;
+
+  console.log(business);
   const flight = new FlightModel({
     airline: airline,
     flightNumber: flightNumber,
     origin: origin,
     destination: destination,
-    departureDate: departureDate,
+    departureDate: departure,
     firstclassCount: firstclassCount,
     economyclassCount: economyclassCount,
     businessclassCount: businessclassCount,
@@ -107,31 +115,31 @@ app.post("/flight", async (req, res) => {
 
   try {
     flight.save();
-    res.send("Flight saved successfully!!");
+    res.send(true);
   } catch {
     res.send("Error!!");
   }
 });
 
-// DELETE
+// DELETE FLIGHT
 app.delete("/flight/:id", async (req, res) => {
+  const { id } = req.params;
+  // res.send(id);
   try {
-    const deletedFlight = await FlightModel.findByIdAndDelete(req.params.id);
-    if (!deletedFlight) {
-      return res.send("Flight not found!!");
-    }
-    res.send("Flight deleted successfully!!");
+    await FlightModel.findByIdAndDelete(id);
+    res.send(true);
   } catch (error) {
     res.send(error);
   }
 });
 
+// USER LOGIN
 app.post("/userlogin", async (req, res) => {
   const { email, password } = req.body;
 
   const response = await UserModel.find(
     { email: email },
-    { password: 1, _id: 0 }
+    { password: 1, name: 1, _id: 1 }
   );
 
   if (response.length !== 0) {
@@ -141,13 +149,18 @@ app.post("/userlogin", async (req, res) => {
         if (resp) {
           const user = { email: email };
           const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
-          res.json({ accessToken: accessToken });
+          res.json({
+            accessToken: accessToken,
+            name: response[0].name,
+            id: response[0].id,
+          });
         } else res.send(false);
       })
       .catch((error) => console.log(error));
   } else res.send("NE");
 });
 
+// ADMIN LOGIN
 app.post("/adminlogin", async (req, res) => {
   const { name, password } = req.body;
   const response = await AdminModel.find(
@@ -158,23 +171,33 @@ app.post("/adminlogin", async (req, res) => {
     .compare(password, response[0].password)
     .then((resp) => {
       if (resp) {
-        res.send("Admin logged in successfully");
+        res.send(true);
       } else res.send(false);
     })
     .catch((error) => console.log(error));
 });
-
+//FLIGHT NUMBER SUGGESTIONS
+app.post("/flightnumber", async (req, res) => {
+  const { value } = req.body;
+  const response = await FlightModel.find({},
+    // {
+    //   origin: { $regex: value, $options: "i" },
+    // },
+    { flightNumber: 1, _id: 0 }
+  );
+console.log(response);
+  res.send(response);
+});
 // ORIGIN SUGGESTIONS
 app.post("/fromsuggestions", async (req, res) => {
-  let { value } = req.body;
-
-  const response = await FlightModel.find(
-    {
-      origin: { $regex: value, $options: "i" },
-    },
+  const { value } = req.body;
+  const response = await FlightModel.find({},
+    // {
+    //   origin: { $regex: value, $options: "i" },
+    // },
     { origin: 1, _id: 0 }
   );
-
+console.log(value);
   res.send(response);
 });
 
@@ -206,29 +229,22 @@ app.post("/search", async (req, res) => {
     destination: { $regex: toValue, $options: "i" },
     origin: { $regex: fromValue, $options: "i" },
   });
-console.log(response);
+  console.log(response);
   res.send(response);
 });
 
 // BOOK FLIGHTS
 app.post("/flight/:id", async (req, res) => {
   const { id } = req.params;
-  var {
-    firstclassCount,
-    businessclassCount,
-    economyclassCount,
-    u_id,
-  } = req.body;
+  var { firstticket, businessticket, economyticket, u_id } = req.body;
 
-  if (firstclassCount === undefined) firstclassCount = 0;
-  if (businessclassCount === undefined) businessclassCount = 0;
-  if (economyclassCount === undefined) economyclassCount = 0;
-  const bookedcount = firstclassCount + businessclassCount + economyclassCount;
+  const bookedcount =
+    parseInt(firstticket) + parseInt(businessticket) + parseInt(economyticket);
   const updateData = {
     $inc: {
-      economyclassCount: economyclassCount * -1,
-      firstclassCount: firstclassCount * -1,
-      businessclassCount: businessclassCount * -1,
+      economyclassCount: economyticket * -1,
+      firstclassCount: firstticket * -1,
+      businessclassCount: businessticket * -1,
     },
   };
   try {
@@ -236,14 +252,23 @@ app.post("/flight/:id", async (req, res) => {
       new: true,
     });
     const user = await UserModel.findById(u_id);
-
+    console.log(u_id);
     const booking = new BookingModel({
       user_id: u_id,
+      flight_id: id,
       flightNumber: flight.flightNumber,
       passengerName: user.name,
       passengerEmail: user.email,
       passengerPhone: user.contact_number,
       bookedcount: bookedcount,
+      depature: flight.destination,
+      origin: flight.origin,
+      date: flight.departureDate,
+      bookedcount: {
+        firstClassCount: firstticket,
+        economicClassCount: economyticket,
+        businessClassCount: businessticket,
+      },
     });
     booking.save();
     res.send("Booked successfully");
@@ -257,9 +282,36 @@ app.get("/user/:id", async (req, res) => {
   const response = await BookingModel.find({ user_id: id });
   res.send(JSON.stringify(response));
 });
+// DELETE BOOKINGS
+app.post("/delbooking/:id", async (req, res) => {
+  const { id } = req.params;
+  const { f_id } = req.body;
+  const booked = await BookingModel.findById(id);
+  console.log(booked);
+  const updateData = {
+    $inc: {
+      economyclassCount: booked.bookedcount.economicClassCount,
+      firstclassCount: booked.bookedcount.firstClassCount,
+      businessclassCount: booked.bookedcount.businessClassCount,
+    },
+  };
+  await FlightModel.findOneAndUpdate({ _id: f_id }, updateData);
+  await BookingModel.findByIdAndDelete(id);
+});
 
+// ALL FLIGHTS
+app.get("/flights", async (req, res) => {
+  const response = await FlightModel.find({});
+  res.send(response);
+});
 // ALL BOOKINGS ADMIN
-
+app.post("/allbooking",async(req,res)=>
+{
+const {flightNumber,departure} = req.body;
+const departureDate = new Date(departure);
+const response = await BookingModel.find({flightNumber:flightNumber})
+res.send(response);
+})
 app.listen(3000, () => {
   console.log("Listening in port 3000");
 });

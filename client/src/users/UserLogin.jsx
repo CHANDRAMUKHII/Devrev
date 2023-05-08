@@ -7,9 +7,10 @@ const UserLogin = () => {
   const navigate = useNavigate();
   const emailRef = useRef();
   const passwordRef = useRef();
-  let flag;
+
   async function submitHandler(event) {
     event.preventDefault();
+    let flag;
     const email = emailRef.current.value;
     const password = passwordRef.current.value;
     console.log(password);
@@ -18,13 +19,23 @@ const UserLogin = () => {
       .then((res) => {
         if (res.data === false) {
           flag = false;
-          alert("Incorrect email or password");
+          toast.error("Incorrect email or password", {
+        position: toast.POSITION.TOP_RIGHT,
+        autoClose: 2000,
+        hideProgressBar: true,
+      });
         } else if (res.data === "NE") {
           flag = false;
-          alert("Unregistered user");
+          toast.error("Unregistered user", {
+        position: toast.POSITION.TOP_RIGHT,
+        autoClose: 2000,
+        hideProgressBar: true,
+      });
         } else {
           flag = true;
           localStorage.setItem("access_token", res.data.accessToken);
+          localStorage.setItem("name", res.data.name);
+          localStorage.setItem("id", res.data.id);
         }
       })
       .catch((error) => console.log(error));

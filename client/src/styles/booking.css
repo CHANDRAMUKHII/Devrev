@@ -106,3 +106,22 @@ li.active {
 border: none !important;
 
 }
+
+.display-wrapper{
+width: 90%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 20rem);
+  justify-content: center;
+
+}
+
+.flight-details{
+display: flex;
+align-items: center;
+}
+
+.flights-container{
+box-shadow: rgb(38, 57, 77) 0px 20px 30px -10px;
+padding: 10px;
+font-weight: bold;
+}
