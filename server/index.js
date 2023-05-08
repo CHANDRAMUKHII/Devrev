@@ -3,12 +3,14 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const cors = require("cors");
 require("dotenv").config();
+const path = require("path");
 const AdminModel = require("./models/adminModel");
 const UserModel = require("./models/userModel");
 const FlightModel = require("./models/flightModel");
 const BookingModel = require("./models/bookingModel");
 const app = express();
 const jwt = require("jsonwebtoken");
+
 app.use(
   cors({
     origin: "*",
@@ -29,10 +31,21 @@ mongoose
   .catch((err) => {
     console.log(err);
   });
-
+const _dirname = path.dirname("")
+const buildPath = path.join(_dirname,"../client/dist")
+app.use(express.static(buildPath))
+app.get("/*", function(req, res) {
+  res.sendFile(path.join(__dirname, "../client/dist/index.html"), function(
+    err
+  ) {
+    if (err) {
+      res.status(500).send(err);
+    }
+  });
+});
 // CREATE ADMIN
 app.post("/admin", async (req, res) => {
-  const {  password, email } = req.body;
+  const { password, email } = req.body;
   const hash = await bcrypt.hash(password, 10);
   const admin = new AdminModel({
     password: hash,
@@ -179,25 +192,27 @@ app.post("/adminlogin", async (req, res) => {
 //FLIGHT NUMBER SUGGESTIONS
 app.post("/flightnumber", async (req, res) => {
   const { value } = req.body;
-  const response = await FlightModel.find({},
+  const response = await FlightModel.find(
+    {},
     // {
     //   origin: { $regex: value, $options: "i" },
     // },
     { flightNumber: 1, _id: 0 }
   );
-console.log(response);
+  console.log(response);
   res.send(response);
 });
 // ORIGIN SUGGESTIONS
 app.post("/fromsuggestions", async (req, res) => {
   const { value } = req.body;
-  const response = await FlightModel.find({},
+  const response = await FlightModel.find(
+    {},
     // {
     //   origin: { $regex: value, $options: "i" },
     // },
     { origin: 1, _id: 0 }
   );
-console.log(value);
+  console.log(value);
   res.send(response);
 });
 
@@ -305,13 +320,12 @@ app.get("/flights", async (req, res) => {
   res.send(response);
 });
 // ALL BOOKINGS ADMIN
-app.post("/allbooking",async(req,res)=>
-{
-const {flightNumber,departure} = req.body;
-const departureDate = new Date(departure);
-const response = await BookingModel.find({flightNumber:flightNumber})
-res.send(response);
-})
+app.post("/allbooking", async (req, res) => {
+  const { flightNumber, departure } = req.body;
+  const departureDate = new Date(departure);
+  const response = await BookingModel.find({ flightNumber: flightNumber });
+  res.send(response);
+});
 app.listen(3000, () => {
   console.log("Listening in port 3000");
 });
